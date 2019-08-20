@@ -1,0 +1,51 @@
+n = 100000
+lambda = 4
+B = 1000
+
+# create 1000 bootstrapped data samples based on original data set
+# create matrix where each column corresponds to a bootstrapped data set
+# vector to store means ----- log(mean())
+# 99% CI based on that vector ----- CI = (quantile(0.005,), quantile(0.995))
+
+
+library('asympTest')
+asymp.test(samps)
+
+count = 0
+count2 = 0
+
+for(b in 1:B) {
+  x = rpois(n, lambda)
+  lambdaHat = mean(x)
+  meanVec = rep(0, length = B)
+  for(i in 1:B){
+  xBoot = sample(x,B, replace = TRUE)
+  meanVec[i] = mean(xBoot)               #Bootstrap from random Pois process X, fill mean vector with
+                                        #each bootstrap mean. Process done 1000 times  
+
+  }
+  
+  sdBootLambda = sqrt(lambdaHat/n)
+  print(sdBootLambda)
+  
+  
+  #Confidence Interval
+
+  
+  lowerBound = lambdaHat - 1.96*sdBootLambda
+  upperBound = lambdaHat + 1.96*sdBootLambda
+  
+  if ((lambda >= lowerBound) & (lambda <= upperBound)) count = count + 1
+  
+  lowerBound2 = quantile(meanVec, 0.025)
+  upperBound2 = quantile(meanVec, 0.975)
+  
+  if ((lambda >= lowerBound2) & (lambda <= upperBound2)) count2 = count2 + 1
+  
+  
+  
+  
+}
+
+print (count/B)
+print (count2/B)
