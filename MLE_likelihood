@@ -1,0 +1,30 @@
+
+mu = 10
+sig = 15
+xGrid = seq(mu-5*sig, mu+5*sig, length = 10000)
+trueDens = dnorm(xGrid, mu, sig)
+y11 = -20
+y12 = 30
+plot(xGrid, trueDens, type = 'l', xaxs = 'i', yaxs = 'i', xaxt = 'n', xlab = '', ylab = '', yaxt = 'n', bty = 'L')
+axis(1, labels = c(expression(mu)), expression(y[1]), expression(y[2]), at = c(mu,y11,y12))
+abline(v=mu)
+segments(y11, 0, y11, dnorm(y11, mu, sig), lty=2)
+segments(y12, 0, y12, dnorm(y12,mu,sig),lty = 2)
+
+----------------------------------------------------------------------------------------------------------------
+
+#Generate random data -----------
+lambda = 57
+n = 100
+x = rexp(n,lambda)
+
+#Plot density -----------------------
+xGrid = seq(0,0.1, length = 100)
+dens = lambda*exp(-lambda*xGrid)
+plot(xGrid, dens)
+
+#Plot the likelihood ---------------
+lambdaGrid = seq(0,100,length = 10000)
+like = (lambdaGrid^n)*exp(-lambdaGrid*sum(x))
+
+plot(lambdaGrid, like, type ="l", col = "blue")
