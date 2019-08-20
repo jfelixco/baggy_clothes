@@ -1,0 +1,53 @@
+---
+title: "104_HW_1"
+author: "Johar Felix-Contreras"
+date: "April 11, 2019"
+output: pdf_document
+---
+
+```{r}
+library(readr)
+voteData = read.csv("comp_ia_bootstrap2_RCT.csv")
+
+#We yield a table that has a lot of NA values, we are concerned mostly with the NA values in treat_real, the experimental variable
+#We remove any entries in the data where treat_real contains an NA and recreate the matrix
+voteData = voteData[!is.na(voteData$treat_real), ]
+
+#To test "randomization" for both populations, we split them into two groups depending on treat_real = 1 vs treat_real = 0
+treatVsControl = split(voteData, voteData$treat_real)
+treatPop = treatVsControl[["1"]]
+controlPop = treatVsControl[["0"]]
+
+comparativeStat = matrix(NA, nrow = 5, ncol = 5)
+colnames(comparativeStat) = c("Assigned", "Control", "Difference", "T-Stat", "P-Value")
+
+categories = c("Age", "Female", "Voted in 1998", "Voted in 2000", "New Voter")
+rownames(comparativeStat) = categories
+
+#######################################################
+  comparativeStat[1,1] = mean(treatPop$age)
+  comparativeStat[2,1] = mean(treatPop$female2)
+  comparativeStat[3,1] = mean(treatPop$vote98)
+  comparativeStat[4,1] = mean(treatPop$vote00)
+  comparativeStat[5,1] = mean(treatPop$newreg)
+  
+  comparativeStat[1,2] = mean(controlPop$age)
+  comparativeStat[2,2] = mean(controlPop$female2)
+  comparativeStat[3,2] = mean(controlPop$vote98)
+  comparativeStat[4,2] = mean(controlPop$vote00)
+  comparativeStat[5,2] = mean(controlPop$newreg)
+  
+  comparativeStat[,3] = comparativeStat[,1] - comparativeStat[,2]
+  
+  tStats = c(0.873, 0.472, 0.535, 0.243, 0.899)
+  pVals = c(0.3828, 0.6368, 0.5928, 0.8082, 0.3686)
+  
+  comparativeStat[,4] = tStats
+  comparativeStat[,5] = pVals
+  
+
+#########################################################
+  
+
+comparativeStat
+```
