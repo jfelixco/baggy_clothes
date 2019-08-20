@@ -1,0 +1,94 @@
+---
+title: "PS4"
+author: "Johar"
+date: "3/14/2019"
+output: pdf_document
+---
+
+```{r}
+
+install.packages('forecast', repos = 'https://CRAN.R-project.org/package=forecast')
+library('forecast')
+
+```
+
+
+```{r}
+model = read.table("/raid/users/jfelixco/guessTheModel1.txt")
+model = as.numeric(model[,1])
+
+summary(model)
+```
+
+```{r}
+plot(density(model), main = "Model Density")
+```
+
+```{r}
+# To get an idea of what the model may look like and approximate
+# Plotting the whole model gets ugly and convoluted due to sheer size, so we plot the first tenth
+plot(model[1:10000], type = 'l', lwd = 0.6, main = "Indexed Model Plot")
+```
+
+Based off sheer looks, the plot seems to resemble a first order autoregressive process.
+
+```{r}
+acf(model, main = "Full Autocorrelation")
+```
+
+The autocorrelation decaying at such a rate would definitely suggest an AR(1) process.
+
+```{r}
+acf(model[1:10000], main = "Autocorrelation for first 10,000 observations")
+```
+
+A closer look (at a smaller sample size) shows us that the correlation tapers down quickly before going oscillating, most likely converging around 0.
+
+```{r}
+auto.arima(model)
+```
+
+Estimated parameters are shown above.
+
+b) Something significant about the standard error seems to be that they are all hovering around what would be significant p values (0.05, [0.001, 0.1]). This would indicate a well fitting and confident model. 
+
+
+```{r}
+model2 = model[1:100]
+summary(model2)
+```
+
+
+```{r}
+plot(density(model2), main = 'Density of first 100')
+```
+
+```{r}
+plot(model2, main = 'First 100 Observations', type ='l', lwd = 0.6)
+```
+
+```{r}
+acf(model2, main = 'Observations 1-100')
+```
+
+```{r}
+auto.arima(model2)
+```
+
+```{r}
+model3 = model[1:1000]
+summary(model3)
+plot(density(model3), main = 'Density of 1000 Observations')
+```
+
+```{r}
+plot(model3, main = '1000 Observations', type = 'l', lwd = 0.6)
+```
+
+```{r}
+acf(model3, main = 'Observations 1-1000')
+```
+
+```{r}
+auto.arima(model3)
+```
