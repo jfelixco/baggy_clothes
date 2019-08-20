@@ -1,0 +1,279 @@
+## DISCLAIMER: This is not by me and I take no credit. 
+ ## This is personally a great introductory reminder of actually building, in R, some of the probability distributions we learned 
+ ## from Probability Theory and how to draw a sample data set from them.
+
+
+
+
+
+---
+title: "ECON 114 Lab 5 - Ziyu He"
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+  word_document: default
+---
+
+#### **Today's topic**
+       
+    1. Issues from homework 2. 
+
+    2. General review of distributions.
+    
+    3. Build a function which generates a mixture distribution. 
+    
+    4. Practice
+    
+***    
+> **Issues from homework 2**
+
+* __Var or sd?__
+
+In statistics, whenever we wirte down things like $\mathcal{N}(x, y)$,  we mean a normal distribution with mean $x$ and variance $y$. However, in R, this is not equivalent to type 
+      
+    rnorm(samplesize,mean=x, sd=y)
+    
+Becasue by defult the second argument in side of "rnorm( )" is standard deviation instead of variance. Hence, to fully capture the distribution, we need 
+
+    rnorm(samplesize,mean=x, sd=sqrt(y))
+
+* __The difference between formular__ 
+
+\begin{align*}
+Kurt(Y) & = E\left[\left(\frac{(Y-E[Y])}{\sigma}\right)^4\right] = \frac{E\left[(Y-E[Y])^4\right]}{E\left[Var(Y)\right]^2} = \frac{E\left[(Y-E[Y])^4\right]}{E\left[{\sigma}\right]^4}
+\end{align*}
+
+and R build in function "kurtosis( )". To see this, let's generating a data set 
+```{r}
+library(moments)
+n = c(100,1000,10000,100000)
+     set.seed(123)
+     sampleKurtosis1 = rep(NA,4)
+     sampleKurtosis2 = rep(NA,4)
+     sampleKurtosis3 = rep(NA,4)
+     for(i in 1:4) {
+         samplesize = n[i]
+         data = c(rnorm(0.87*samplesize,mean=0, sd=1),
+                  rnorm(0.1*samplesize,mean=0,sd=sqrt(7.2)),
+                  rnorm(0.03*samplesize,mean=0,sd=sqrt(11)))
+         sampleKurtosis1[i] = mean((data-mean(data))^4)/(sd(data)^4)
+         sampleKurtosis2[i] = kurtosis(data)
+         sampleKurtosis3[i] = mean((data-mean(data))^4)/(sqrt((n[i]-1)/n[i])*sd(data))^4
+     }
+```
+
+* __Daily return => return rate__ 
+
+e.g. 
+     
+    log(diff( )))
+
+* __QQ-plot has two features__
+      + testing whether data follows a target distribution => data scatter plot
+      + testing the shape information => refernce line
+
+Let's take a look of Problem 1 of homework 2 as an example.
+```{r, fig.align='center', fig.width=6, fig.height=6}
+library(quantmod)
+getSymbols("MJNA", from="2016-02-02", to="2017-02-01")
+returns <- diff(log(MJNA$MJNA.Adjusted))
+n <- length(returns)
+returns <- returns[2:n,]
+
+par(mfrow=c(2,1))
+p = 0.15
+qqnorm(as.ts(returns), datax=TRUE)
+qqline(returns, datax = TRUE, distribution = qnorm, probs = c(p, 1-p))
+
+plot(density(returns))
+```
+
+> **Let's discuss distributions**
+
+First, let's define some basic parameters
+```{r}
+n = 100000
+mu = 0
+sd = 1
+
+lowerlim = 0
+upperlim = 1
+
+lambda = 1
+```
+
+
+* __The normal distribution__ 
+
+\begin{align*}
+f(x)=\frac{1}{\sigma\sqrt{2\pi}}\exp\left(-\frac{\left(x-\mu\right)^{2}}{2\sigma^{2}}\right),\ x\in\mathbb{R}
+\end{align*}
+
+```{r}
+normalDraws <- rnorm(n,mu,sd)
+hist(normalDraws)
+par(new = TRUE)
+x <- seq(-5, 5, length=n)
+plot(x, dnorm(x, mean = 0, sd = 1), axes = FALSE,  xlab = "", ylab = "")
+```
+
+* __The uniform__
+
+\begin{align*}
+f(x)=\begin{cases}
+\begin{array}{c}
+\frac{1}{b-a}\\ 0
+\end{array} & \begin{array}{c}
+\mathrm{for}\ x\in\left[a,b\right]\\
+\mathrm{otherwise}
+\end{array}\end{cases}
+\end{align*}
+
+```{r}
+uniformDraws <- runif(n,lowerlim,upperlim)
+hist(uniformDraws)
+par(new = TRUE)
+x <- seq(lowerlim,  upperlim, length=n)
+plot(x, dunif(x, min = lowerlim, max = upperlim), axes = FALSE,  xlab = "", ylab = "")
+```
+
+* __The exponential__
+
+\begin{align*}
+f(x)=\lambda\exp\left(-\lambda x\right),\ x\in\mathbb{R^{+}}
+\end{align*}
+
+```{r}
+exponentialDraws <- rexp(n,lambda)
+hist(exponentialDraws)
+par(new = TRUE)
+x <- seq(lowerlim, 10, length=n)
+plot(x, dexp(x, rate = lambda), axes = FALSE,  xlab = "", ylab = "")
+```
+
+* __The poisson__
+
+\begin{align*}
+f(x)=\frac{\lambda^{x}\exp\left(-\lambda\right)}{x!},\ x\in\mathbb{Z^{+}}
+\end{align*}
+
+```{r}
+poissonDraws <- rpois(n,lambda)
+hist(poissonDraws)
+par(new = TRUE)
+x <- seq(lowerlim, 10, length=11)
+plot(x, dpois(x, lambda), axes = FALSE,  xlab = "", ylab = "")
+```
+
+* __The log-normal__
+
+\begin{align*}
+f(x)=\frac{1}{x\sigma\sqrt{2\pi}}\exp\left(-\frac{\ln\left(x-\mu\right)^{2}}{2\sigma^{2}}\right),\ x\in\left(0,+\infty\right)
+\end{align*}
+
+```{r}
+logNormalDraws <- rlnorm(n,mu,sd)
+hist(logNormalDraws)
+par(new = TRUE)
+x <- seq(lowerlim, 70, length=n)
+plot(x, dlnorm(x, meanlog = 0, sdlog = 1), axes = FALSE,  xlab = "", ylab = "")
+```
+
+> **Build a function which generates a mixture distribution**
+
+To get a mixture of distributions, we want to mechanically draw randomly from one of two or more distributions:
+```{r}
+n = 100000
+mixture = vector(mode='numeric',length=n)
+
+p1 = .7
+p2 = .3
+
+mu1 = 0
+mu2 = 10
+
+sd1 = 10
+sd2 = 3
+set.seed(123)
+
+for(i in 1:n){
+  whichDistribution = runif(1,0,1)
+  if(whichDistribution <= p1){
+    mixture[i] = rnorm(1,mu1,sd1)
+  }
+  else if(whichDistribution > p1){
+    mixture[i] = rnorm(1,mu2,sd2)
+  }
+  #else{
+  #  do this
+  #}
+}
+hist(mixture)
+```
+
+We can put this into a more flexible function, so we can just recycle it:
+```{r}
+
+rmix2 <- function(n,probs,means,sds){
+  result <- vector(length=n)
+  p1 = probs[1]
+  p2 = probs[2]
+  mu1 = means[1]
+  mu2 = means[2]
+  sd1 = sds[1]
+  sd2 = sds[2]
+  set.seed(123)
+  for(i in 1:n){
+    whichDist = runif(1,0,1)
+    if(whichDist <= p1){
+      result[i] = rnorm(1,mu1,sd1)
+    }
+    else if(whichDist > p1){
+      result[i] = rnorm(1,mu2,sd2)
+    }
+  }
+  return(result)
+}
+mixture2 = rmix2(n,c(p1,p2),c(mu1,mu2),c(sd1,sd2))
+
+hist(mixture2)
+```
+
+Compare this to a normal distribution
+```{r}
+qqnorm(mixture2, datax=TRUE)
+qqline(mixture2, datax=TRUE)
+```
+
+> **Practice**
+
+Playing time! Let's try to make a mixture of an *exponential* [lambda=anything] and a lognormal [mean=0,sd=lambda]
+
+
+
+
+```{r, fig.width=10, fig.height=10}
+#Solution
+lognexp <- function(n,p,lambda){
+  result <- vector(length=n)
+  for(i in 1:n){
+    whichDistribution = runif(1,0,1)
+    if(whichDistribution <= p){
+      result[i] = rexp(1,lambda)
+    }
+    else{
+      result[i] = rlnorm(1,0,lambda)
+    }
+  }
+  return(result)
+}
+
+par(mfrow=c(3,2),bg="white")
+for(p in c(.25,.5,.75)){
+  for(lambda in c(.2,.6)){
+    plot(density(lognexp(n,p,lambda)),xlim=c(0,20))
+  }
+}
+```
+
