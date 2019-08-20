@@ -1,0 +1,29 @@
+#introduction to bootstrapping
+
+count  = 0
+count BCI = 0 
+
+nProc = 100
+n = 500
+mu = 3
+sig = 2
+
+for(ps in 1:n) {
+  
+B = n
+bSamples = matrix(NA, nrow = n, ncol = B)
+bMeans = vector(length = n, mode = 'numeric')
+
+sampleLN = rlnorm(n,mu, sig^2)
+
+for (i in 1:B) {
+  bSamples[,i] = sample(sampleLN, n, replace = TRUE)
+  bMeans[i] = mean(log(bSamples[,i])
+        
+}
+
+muB = mean(bMeans)
+sigmuB = sd(bMeans)
+
+hist(bMeans)
+}
