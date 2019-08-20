@@ -1,0 +1,66 @@
+#not runnable on its own, but this is my self introduction to ggplot2
+
+
+
+MLDA_fixed = aggregate(MLDA$drinks_alcohol, list(age = MLDA$age_20day), mean)
+MLDA_fixed$over21 = ifelse(MLDA_fixed$age >= 21, 1, 0)
+
+#MLDA_clean = MLDA_fixed[101:476,]
+
+require(ggplot2)
+ggplot(MLDA_clean, aes(age, x, color = factor(over21))) + 
+  geom_point() + stat_smooth(method = 'lm',size = 1.5, formula = y ~ poly(x,3)) +
+  geom_vline(xintercept=21, linetype="longdash") +
+  scale_colour_discrete(name="Age Break",
+                        breaks=c("0", "1"), labels=c("Minor", "Legal")) +
+  ggtitle("Alcohol Consumption by Age") + ylim(0.35,0.75) +
+  labs(title = "Alcohol Consumption by Age", x = "Age", y = "Consumption Proportion", caption = "4 day bins")
+
+
+ggplot(MLDA_fixed2, aes(age, x, color = factor(over21))) + 
+  geom_point() + stat_smooth(method = 'lm',size = 1.5, formula = y ~ poly(x,3)) +
+  geom_vline(xintercept=21, linetype="longdash") +
+  scale_colour_discrete(name="Age Break",
+                        breaks=c("0", "1"), labels=c("Minor", "Legal")) +
+  ggtitle("Alcohol Consumption Age Profile") + ylim(0.35,0.75) +
+  labs(title = "Alcohol Consumption Age Profile", x = "Age", y = "Proportion of People Who Drink", caption = "20 day bins")
+
+
+MLDA$agec = MLDA$ageDay - 21
+MLDA$post = MLDA$over21
+
+
+FirstStage = lm(drinks_alcohol ~ post + agec, data = MLDA)
+
+
+
+#Optimizing a data frame for regression
+MLDA3 = (aggregate(MLDA$drinks_alcohol, list(Age = MLDA$ageDay), mean))
+MLDA3 = MLDA3[388:1841]
+MLDA3$agec = MLDA3$Age - 21
+MLDA3$post = ifelse(MLDA3$Age >= 21, 1, 0)
+MLDA3$drinks_alcohol = MLDA3$x
+MLDA3$birthday = ifelse(MLDA3$Age == 21,1,0)
+
+
+
+MLDA3$ageSq = (MLDA3$agec)^2
+MLDA3$ageCu = (MLDA3$agec)^3
+MLDA3$agecPost = (MLDA3$agec*MLDA3$post)
+MLDA3$agePostSq = (MLDA3$ageSq*MLDA3$post)
+MLDA3$agePostCu = (MLDA3$ageCu*MLDA3$post)
+
+
+
+linear1 = lm(data = MLDA3, drinks_alcohol ~ post + agec + agecPost)
+linear2 = lm(data = MLDA3, drinks_alcohol ~ post + agec + agecPost + birthday)
+quadratic1 = lm(data = MLDA3, drinks_alcohol ~ post + agec + agecPost + ageSq + agePostSq)
+quadratic2 = lm(data = MLDA3, drinks_alcohol ~ post + agec + agecPost + ageSq + agePostSq+ birthday)
+cubic1 = lm(data = MLDA3, drinks_alcohol  ~ post + agec + agecPost + ageCu + agePostCu)
+cubic2 = lm(data = MLDA3, drinks_alcohol  ~ post + agec + agecPost + ageCu + agePostCu + birthday)
+
+
+stargazer(linear1,linear2,quadratic1,quadratic2,cubic1,cubic2, type = 'latex')
+
+
+#PRIME 
