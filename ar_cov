@@ -1,0 +1,27 @@
+library('quantmod')
+getSymbols("HOG", from= "2001-01-01")
+
+plot(HOG[,4], HOG[,0], main = "Harley Davidson vroom vroom")
+
+set.seed(345)
+index = sample(c(length(close)),100)
+
+close = as.numeric(HOG[,4])
+len = length(close)
+varSamp = vector(mode = 'numeric', length = 100)
+covSamp = vector(mode = 'numeric', length = 100)
+corSamp = vector(mode = 'numeric', length = 100)
+
+for(i in 1:length(index)) {
+  j = 5  #timegap
+  a = index[i] 
+  b = index[i] -j
+  c = len
+  d = len - j
+  randSubSamp = close[a:c]
+  randSubSamp2 = close[b:d]
+  varSamp[i] = var(randSubSamp)
+  covSamp[i] = cov(randSubSamp, randSubSamp2)
+  corSamp[i] = cor(randSubSamp, randSubSamp2)
+  
+}
