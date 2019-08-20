@@ -1,0 +1,37 @@
+mu = 1
+sig = 12.5
+nMC = 1000
+nBoot = 1000
+nSim = 5
+count1 = count2 = count3 = 0
+
+for(i in 1:nMC) {
+  x = rnorm(nSim,mu,sig)                                  # Define variables in vector spaces
+  xBar = mean(x)
+  meanVec = rep(0, length = nBoot)
+  for(j in 1:nBoot) {
+    xBoot = sample(x, nSim, replace = TRUE)               # Bootstrap method in for loop
+    meanVec[j] = mean(xBoot)
+  }
+  xBarSDBoot = sd(meanVec)
+  xBarSD = sd(x)/sqrt(nSim)
+  
+  ####### Bounds for Confidence Intervals #############
+  lower1 = xBar - 1.96*xBarSD
+  upper1 = xBar + 1.96*xBarSD
+  lower2 = xBar - 1.96*xBarSDBoot
+  upper2 = xBar + 1.96*xBarSDBoot
+  lower3 = quantile(x, 0.025)
+  upper3 = quantile(x, 0.975)
+  
+  if ((mu>=lower1)&(mu<=upper1)) count1 = count1+1
+  if ((mu>=lower2)&(mu<=upper2)) count2 = count2+1
+  if ((mu>=lower3)&(mu<=upper3)) count3 = count3+1
+  
+}
+
+# Confidence intervals for found mu's
+
+print(count1/nMC) # using sample mean & sd
+print(count2/nMC) # using bootstrap vector's mean and sd
+print(count3/nMC) #quantile bootstrapping
