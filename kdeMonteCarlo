@@ -1,0 +1,17 @@
+# True Density ------------------------------------------------------------
+xGrid = seq(0,20,length=1e6)
+k = 2
+theta = 2
+densityTrue = dgamma(xGrid,shape=k,scale=theta)
+plot(xGrid,densityTrue,type='l')
+
+# Sample, Estimate and Plot -----------------------------------------------
+nSample = 10000
+nMC = 300
+adj = 1
+plot(xGrid,densityTrue,type='l')
+for(i in 1:nMC){
+  ySample = rgamma(nSample,shape=k,scale=theta)
+  densityEstiamte = density(ySample,adjust=adj)
+  lines(densityEstiamte,col=rgb(0,0,0,0.1))
+}
