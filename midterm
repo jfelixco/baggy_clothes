@@ -1,0 +1,116 @@
+---
+title: "Midterm"
+output: pdf_document
+
+---
+
+Plot
+```{r}
+mystery1 = read.table("/raid/users/jfelixco/R/midtest/midtermDat2019.txt")
+mystery = as.numeric(mystery1[1:2266, 1])
+
+plot(mystery, type = 'l', main = "Midterm Data Set")
+
+```
+
+From initial observation, we infer the data comes from a time series set.
+Likely from a time series in a difference of some ticker tracking financial data.
+
+
+Basic Statistics
+```{r}
+mean = mean(mystery)
+median = median(mystery)
+sd = sd(mystery)
+mad = mad(mystery)
+
+paste("Mean: ", mean, ", Median: ", median, ", SD: ", sd, ", MAD: ", mad, sep="")
+```
+
+The mean and median differ highly, which indicates skewness and variablity. The standard deviation and median also differ, likely stemming from the same cause. The skewness likely affects both of these, as well the multimodality because it differs highly from a normal, i.e. it is not clearly centered around the median nor mean.
+
+```{r, fig.height = 8, fig.width = 8}
+#QQ plot
+qqnorm(mystery, datax = "TRUE", main = "Normal Q-Q Plot of Mystery")
+qqline(mystery, datax= "TRUE")
+
+qqnorm(log(mystery), datax = "TRUE")
+
+
+```
+
+The qqplot of the untouched data shows clearly that it does not follow a distribution, we see considerably heavier tails.
+When we take the log of the data, however, then it seems much more normalized. Indicating that the data follows a log-normal distribution. 
+
+The unlogged data shows heavy tails, which may indicate a high kurtosis to be evaluated later, since the logged data does not, it very likely has a lower kurtosis.
+
+#-----Histograms -----------------------------------------------------------------------
+```{r, fig.height = 8, fig.width = 8}
+
+#Histograms
+par(mfrow=c(2,1), bg="white")
+hist(mystery, breaks=5, xlab="", main="Breaks = 5")
+hist(mystery, breaks=10, xlab="", main="Breaks = 10") 
+hist(mystery, breaks=30, xlab="", main="Breaks = 30") 
+hist(mystery, breaks=50, xlab="", main="Breaks = 50") 
+
+
+```
+
+The histogram suggests that the data could follow a distribution of inverse gamma or log normal. Due to logistical simplicity, we decided to test for the log normal.
+
+
+KDE with Superimposed Normal
+```{r}
+datGrid = seq(min(mystery), max(mystery), length=1000)
+normDensity = dnorm(datGrid, mean=mean, sd=sd)
+MADDensity = dnorm(datGrid, mean=median, sd=mad)
+
+plot(density(mystery), main="KDE", lwd=2)
+lines(datGrid, normDensity, lwd=1, lty=2)
+lines(datGrid, MADDensity, lwd=1, lty=3)
+
+legend( "topright", legend=c("KDE","Normal Density (mean,sd)", "Normal Density (median,mad)"), lty=c(1,2,3), lwd=c(1,1,1) )
+```
+The solid line in the figure above is the kernel density estimate of the data in midtermDat2019.txt. The dashed line is the normal distribution with the same mean and standard deviation of the data. The dotted line is the normal distribution with the mean and standard deviation equal to the median and MAD.
+
+```{r}
+paste("Sample skewness of the data:",mean(((mystery - mean(mystery))/(sd(mystery)))^3))
+paste("Sample kurtosis of the data:",mean(((mystery - mean(mystery))/(sd(mystery)))^4))
+```
+The skewness is positive, so the data is right skewed. The kurtosis of our data is heavily above 3; therefore, we can confirm that the tails are heavily distributed.
+
+
+```{r}
+LogMystery = log(mystery)
+paste("Sample skewness of the data:",mean(((LogMystery - mean(LogMystery))/(sd(LogMystery)))^3))
+paste("Sample kurtosis of the data:",mean(((LogMystery - mean(LogMystery))/(sd(LogMystery)))^4))
+```
+
+The skewness is negative, so the data is left skewed. The kurtosis of our data is below 3; thereofore, we
+can infer that the tails are not heavily distributed.
+
+
+
+```{r}
+KDEdata = density(mystery,adjust=1)
+Rangedata = seq(min(KDEdata$x),max(KDEdata$x),length=length(mystery))
+dataLogNorm = dlnorm(Rangedata,meanlog=mean(log(mystery)),sdlog=sd(log(mystery)))
+plot(KDEdata,"KDE of MT data",ylim=c(0,max(KDEdata$y,dataLogNorm)))
+lines(Rangedata,dataLogNorm,lty=2)
+
+lines(density(mystery,adjust = 1.2), lty = 3)
+
+legend( "topright", legend=c("Real Data","KDE, Adjust = 1", "KDE, Adjust = 1.2"), lty=c(1,2,3), lwd=c(1,1,1),)
+
+```
+
+Increasing the bandwidth causes the distribution to more closely resemble a log-norm distribution, further supporting our previous inferences.
+
+
+#------------------------Conclusion ---------------------------------------------------------------------
+
+We observe sufficient evidence to assume the data comes from a log-normal distribution.
+Additionally, the plot of the original data seems to follow a time-series model. 
+
+We conclude that the data must come from some financial tracking, possibly a stock ticker or an index tracker, as these typically follow a logarithimic normal distribution. 
