@@ -1,0 +1,106 @@
+---
+title: "104_HW2"
+author: "Johar Felix-Contreras"
+date: "April 18, 2019"
+output: pdf_document
+---
+
+
+```{r}
+#Extract data, define it
+#Clean data of entries with an "NA" for the 'contact' value
+library(readr)
+hw2_data = read.csv("comp_ia_bootstrap2_RCT.csv")
+voteData = hw2_data[!is.na(hw2_data$contact),]
+rm(hw2_data)
+
+#Split data into treatment and control. based on 'control'
+treatVsControl = split(voteData, voteData$contact)
+treatPop = treatVsControl[["1"]]
+controlPop = treatVsControl[["0"]]
+
+
+```
+
+To see if the test for our key variable 'contact' is truly unbiased, we split the data into two seperate populations, treatment and control. We can now compare the means for various traits that describe the populations. If the means are relatively similar, we can assume the results will be unbiased. 
+
+```{r}
+comparativeStat = matrix(NA, nrow = 5, ncol = 5)
+colnames(comparativeStat) = c("Opt In", "Control", "Difference", "T-Stat", "P-Value")
+
+categories = c("Age", "Female", "Voted in 1998", "Voted in 2000", "New Voter")
+rownames(comparativeStat) = categories
+
+```
+
+Filling values
+
+```{r}
+  comparativeStat[1,1] = mean(treatPop$age)
+  comparativeStat[2,1] = mean(treatPop$female2)
+  comparativeStat[3,1] = mean(treatPop$vote98)
+  comparativeStat[4,1] = mean(treatPop$vote00)
+  comparativeStat[5,1] = mean(treatPop$newreg)
+  
+  comparativeStat[1,2] = mean(controlPop$age)
+  comparativeStat[2,2] = mean(controlPop$female2)
+  comparativeStat[3,2] = mean(controlPop$vote98)
+  comparativeStat[4,2] = mean(controlPop$vote00)
+  comparativeStat[5,2] = mean(controlPop$newreg)
+  
+  comparativeStat[,3] = comparativeStat[,1] - comparativeStat[,2]
+  tStat2 = c(12.757, 4.266, 5.982, 6.745, 1.914)
+  pVals2 = c(0.0001, 0.0001, 0.0001, 0.0001, 0.0556)
+  
+  comparativeStat[,4] = tStat2
+  comparativeStat[,5] = pVals2
+
+  comparativeStat
+
+```
+We have some substantial differences in the variables of county, st_sen and understandably, age. One thing we need to keep in consideration is that the size of the populations is considerably different in this assignment moreso than the last. The control population of 86,249 is several times bigger than our treatment population of 15,153.
+
+
+Regressions:
+
+
+```{r}
+#To make the coding a little simpler, we define our desired variables and a few more to add to the regression
+
+Vote02 = voteData$vote02     #this is the dependent variable we want to observe
+Contact = voteData$contact     #this is the main independent variable for which we want to control
+Vote98 = voteData$vote98
+Vote00 = voteData$vote00
+NewVoter = voteData$newreg
+Female = voteData$female2
+Age = voteData$age
+
+```
+
+Define regressions as variables
+```{r}
+reg1 = lm(Vote02 ~ Contact)
+reg2 = lm(Vote02 ~ Contact + Age)
+reg3 = lm(Vote02 ~ Contact + Age + Female)
+reg4 = lm(Vote02 ~ Contact + Age + Female + Vote98)
+reg5 = lm(Vote02 ~ Contact + Age + Female + Vote98 + Vote00)
+reg6 = lm(Vote02 ~ Contact + Age + Female + Vote98 + Vote00 + NewVoter)
+
+```
+
+Using 'stargazer' package to create a table, knitting regressions side by side.
+```{r}
+library('stargazer')
+stargazer(reg1, reg2, reg3, reg4, reg5, reg6, type = 'latex')
+
+```
+
+
+The code above produces code for an html table output, which will be converted to a pdf and attached to this assignment.
+
+When regressed with the treatment alone, the treatment variable seems to raise probability of voting by about 6.8%. When adding covariates, and continuing to add covariates, that impact shrinks, as can be expected. After accounting for 7 more covariates, that expected effect on probability falls to about 3.9%. What this tells us is that the effect of the covariates is omitted in the first regression, which then overestimates the effect of treatment. 
+
+Adding covariates did reduce bias. Including the covariate for age seemed to have the most individual impact from one regression to the next. This is probably because of the underlying relationship between age and the likelihood that somebody would pick up the call  and listen to it throughout. 
+
+While regression continued to remove bias, it did not eliminate it completely. Just as age can affect the likelihood of someone listening to that call, there are various other unquantifiable variables that could affect the likelihood that an individual would listen to that call. These underlying traits may have an impact on the probability of voting, just as age has, that we cannot possibly account for in a regression. 
+
