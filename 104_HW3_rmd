@@ -1,0 +1,197 @@
+---
+title: "HW3"
+author: "Johar Felix-Contreras"
+date: "May 15, 2019"
+output: pdf_document
+---
+```{r}
+library(readr)
+MLDA = read.csv("C:/Users/johar/documents/R/alcoholConsumption.csv")
+
+age = MLDA$age_yrs
+drinksAlc = MLDA$drinks_Alc
+
+MLDA$over21= ifelse(MLDA$age >= 21, 1, 0)       #indicator variable for above legal drinkin age
+MLDA$ageDay = 21 + MLDA$days_21/365             #turn ages into year units by day, instead of discrete
+#years
+
+props = aggregate(MLDA$drinks_alcohol, list(Age = MLDA$age_20day), mean)
+props$over21 = ifelse(props$Age >=21, 1, 0)
+props = props[23:98,]
+
+MLDA$ageDay = 21 + MLDA$days_21/365  
+MLDA$age_4day = 21 + 4*floor(MLDA$days_21/4)/365 + 2/365
+MLDA$age_20day = 21 + 20*floor(MLDA$days_21/20)/365 + 10/365
+MLDA$age_30day = 21 + 30*floor(MLDA$days_21/30)/365 + 15/365
+MLDA$age_40day = 21 + 40*floor(MLDA$days_21/40)/365 + 20/365
+MLDA$age_100day = 21 + 100*floor(MLDA$days_21/100)/365 + 50/365
+```
+
+
+
+
+
+```{r, height = 20, width = 13}
+# Choosing between our bin sizes. Below are 6 iterations of the relationship between age and
+# the proportion of the population 
+# which consumes alcohol. Taken as the mean of the 'drinks_alcohol' variable for each age range
+
+
+par(mfrow = c(3,2))
+plot(aggregate(MLDA$drinks_alcohol, list(Age = ageDay), mean), 
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 1 day')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_4day), mean), 
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 4 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_20day), mean), 
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 20 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), 
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_40day), mean), 
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 40 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_100day), mean), 
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 100 Days')
+
+
+# The most desirable to me seems like a bin of 30 days. The data is not too noisy and cluttered,
+#  yet enough data stands as to make reasonable arguments
+
+```
+
+```{r, height = 20, width = 13}
+# Determining the best age range (x-axis) to best visualize the data for the question
+#  we're trying to answer
+# The age 21 MUST be included, as that is our cutoff point, so we try to center it around that.
+
+par(mfrow = c(2,2))
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(18,24), 
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(19,23),
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(20,22),
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(20.5,21.5),
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+#For now, we'll go with the second option, from 19 to 23. We keep in mind that the y-axis
+# still needs to be determined, and will probably drastically affect the visualization.
+
+```
+
+
+
+```{r, height = 20, width = 13}
+par(mfrow = c(2,2))
+
+
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(19,23),
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(19,23), ylim = c(0.4,0.7),
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(19,23), ylim = c(0.35,0.75),
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(19,23), ylim = c(0.2,0.8),
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+# Though our desired relationship stands out most at the interval (0.4,0.7), I decide the best
+# would be (0.35,0.75). It still 
+# represents the relationship well without squeezing and selecting the data a
+# bit too much to exaggerate our relationship. After all, we are responsible statisticians.
+
+
+```
+
+```{r}
+#After selecting our bin width and bandwidths, this is the graph chosen to best represent our data
+par(mfrow = c(1,1))
+
+plot(aggregate(MLDA$drinks_alcohol, list(Age = age_30day), mean), xlim = c(19,23), ylim = c(0.35,0.75),
+     pch = 16, ylab = 'Proportion Who Consume Alcohol', main = 'Alcohol Users Through Age Ranges',
+     sub = 'Bin Width 30 Days')
+
+
+```
+
+```{r}
+#some arguments to facilitate the process of regressing through our dataframe. 
+#creates a new dataframe that has added consumption rates for our 30 day age intervals
+prop = aggregate(MLDA$drinks_alcohol, list(age30 = age_30day),mean)
+MLDA2 = merge(MLDA,prop)
+
+# from here on, variable 'x' will signify the rate of alcohol consumption for its 
+# corresponding age group
+# not a great variable name, but it is automatically generated by the aggregate() command
+```
+
+```{r} 
+#regressions, polynomials, good stuff
+reg1 = lm(MLDA2$x ~ MLDA2$age30)
+reg2 = lm(MLDA2$x ~ poly(MLDA2$age30, 2))
+reg3 = lm(MLDA2$x ~ poly(MLDA2$age30, 3))
+
+
+#library(stargazer)
+#stargazer(reg1, reg2, reg3, type = 'html')
+
+#regression table will be included with output files
+
+```
+
+
+
+
+
+
+
+```{r}
+
+#plotting using the prop variable speeds up the program by using approximately 153 observations,
+# instead of using 61784 observations that tell us the exact same thing
+plot(prop, xlim = c(19,23), ylim = c(0.35, 0.75), pch = 16, col = 'blue', xlab = 'Age', ylab = 'Proportion of Population Consuming Alcohol', sub = 'bin size 30 days', main = 'Effect of Turning 21 on Drinking Rates')
+
+
+
+
+#the intervals in the brackets below below correspond to age cutoffs for age interval [19,23]
+lm(MLDA2$x[3949:12722] ~ MLDA2$age30[3949: 12722])
+lm(MLDA2$x[12723:22922] ~ MLDA2$age30[12723:22922])
+
+
+#Using regression outputs to draw lines through the data
+clip(0,21,0,1)
+abline(-0.34772, 0.04313, lwd = 2)
+clip(21,50,0,1)
+abline(0.29051, 0.01697, lwd = 2)
+
+
+#MLDA seems to reduce the proportion of people who drink by about 15%
+
+```
+
+
