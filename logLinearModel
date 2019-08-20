@@ -1,0 +1,20 @@
+library('quantmod')
+
+getSymbols('TSLA', from = '2017-12-01', to = '2018-12-01')
+TSLAClose = TSLA[1:252, 4]
+
+TSLAClose = as.numeric(TSLAClose)
+logTS = log(TSLAClose)
+
+
+y = TSLAClose
+y2 = logTS
+x = seq(252)
+
+linearMod = lm(y~x)
+logLinearMod = lm(y2~x)
+
+summary(linearMod)
+summary(logLinearMod)
+
+#Log Linear Mod has a slightly higher R-Squared
