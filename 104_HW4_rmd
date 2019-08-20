@@ -1,0 +1,194 @@
+---
+title: "104_HW4"
+author: "Johar Felix-Contreras"
+date: "May 21, 2019"
+output: pdf_document
+---
+
+```{r}
+library(readr)
+library(dplyr)
+NHIS = read_csv("C:/Users/johar/documents/R/alcoholConsumption.csv")
+
+#subsestting matrix of interest to only include between ages 19 & 23
+#reasoning behind this is that we want to study MLDA and its immediate impact
+#ages too far away could have too noisy of outcomes on our dependents and 
+#make our regressions unnecessarily noisy
+
+NHIS$age_day = 21 + NHIS$days_21/365
+#this was so we have a hard cut off at both 19 and 23, centering around 21
+#otherwise we end up having 2 years below 21, but essentially 3 years above
+
+NHIS = filter(NHIS, age_day <= 23)
+NHIS = filter(NHIS, age_day >= 19)
+```
+
+```{r, results = 'asis'}
+NHIS$over_21 = ifelse(NHIS$age_yrs >= 21, 1,0)
+
+age_day = NHIS$age_day = 21 + NHIS$days_21/365
+NHIS$age_4day = 21 + 4*floor(NHIS$days_21/4)/365 + 2/365
+NHIS$age_20day = 21 + 20*floor(NHIS$days_21/20)/365 + 10/365
+NHIS$age_30day = 21 + 30*floor(NHIS$days_21/30)/365 + 15/365
+NHIS$age_40day = 21 + 40*floor(NHIS$days_21/40)/365 + 20/365
+NHIS$age_100day = 21 + 100*floor(NHIS$days_21/100)/365 + 50/365
+
+
+post = NHIS$over_21 
+agec = NHIS$age_yrs - 21
+
+uninsured = lm(NHIS$uninsured ~ post + agec + agec*post)
+hsDiploma = lm(NHIS$HS_Diploma ~ post + agec + agec*post)
+hispanic = lm(NHIS$hispanic ~ post + agec + agec*post)
+white = lm(NHIS$white ~ post + agec + agec*post)
+black = lm(NHIS$black ~ post + agec + agec*post)
+employed = lm(NHIS$employed ~ post + agec + agec*post)
+married = lm(NHIS$married ~ post + agec + agec*post)
+working = lm(NHIS$working_lw ~ post + agec + agec*post)
+inSchool = lm(NHIS$going_school ~ post + agec + agec*post)
+male = lm(NHIS$male ~ post + agec + agec*post)
+
+library(stargazer)
+stargazer(uninsured, hsDiploma, hispanic, white, black, font.size = 'small', column.sep.width = '1pt', title = 'Balance')
+stargazer(employed, married, working, inSchool, male, font.size = 'small', column.sep.width = '1pt', title = 'Balance')
+
+#Done in two tables as 10 variables in one table is very hard to fit onto an
+#embedded stargazer prinotut
+
+```
+
+```{r}
+
+par(bg = 'gray')
+
+arrests = read_csv("C:/Users/johar/documents/R/Arrest.csv")
+arrests$age_day = 21 + arrests$days_to_21/365
+arrests$age_4day = 21 + 4*floor(arrests$days_to_21/4)/365 + 2/365
+arrests$age_20day = 21 + 20*floor(arrests$days_to_21/20)/365 + 10/365
+arrests$age_30day = 21 + 30*floor(arrests$days_to_21/30)/365 + 15/365
+arrests$age_40day = 21 + 40*floor(arrests$days_to_21/40)/365 + 20/365
+arrests$age_100day = 21 + 100*floor(arrests$days_to_21/100)/365 + 50/365
+
+
+```
+
+
+```{r}
+polyModel1 = lm(all[1:1461] ~ poly(age_20day[1:1461], 2), data = arrests)
+polyModel2 = lm(all[1462:2922] ~ poly(age_20day[1462:2922], 2), data = arrests)
+
+x1 = with(arrests, seq(min(1), max(1461)))
+y1 = predict(polyModel1, newdata = data.frame(age_20day= x1))
+
+x2 = with(arrests, seq(min(1462), max(2922)))
+y2 = predict(polyModel2, newdata = data.frame(age_20day= x2)) # returned NAs, could not figure out why
+  
+par(bg = 'gray')
+  
+plot(all ~ age_20day, data = arrests, xlim = c(19,23), ylim = c(1300,1900), pch = 16, main = 'Age Profile for Arrest Rates', xlab = 'Ages in 20 day bins', ylab = 'Arrests per 10,000', col ='blue')
+clip(18.85,21,0,1900)
+lines(x1,y1, col = 'black', lwd = 3)
+clip(21,23.2,0,1900)
+lines(x2,y2, col = 'black', lwd = 3)
+
+
+# For the life of me I could not get the second regression (y2 for the subjects above 21)
+# to correctly return results and plot the second line for discontinuity.
+
+# I used the exact same methods and equations while switching indices accordingly.
+# Sometimes R just decides not to work.
+
+# Hopefully it's clear what I was trying to do.
+
+
+```
+
+
+```{r}
+par(mfrow = c(3,2), pin = c(2.3,0.8))
+
+plot(arrests$age_20day, arrests$dui, xlim = c(19,23), ylim = c(0,600), main = 'DUIs', xlab = 'age', ylab = 'Arrests/10,000', col = 'blue', pch= 2)
+plot(arrests$age_20day, arrests$liquor_laws, xlim = c(19,23), ylim = c(0,600), main = 'Violation of Liquor Laws', xlab = 'age', ylab = 'Arrests/10,000', col = 'navy', pch= 2)
+plot(arrests$age_20day, arrests$robbery, xlim = c(19,23), ylim = c(0,80), main = 'Robbery', xlab = 'age', ylab = 'Arrests/10,000', col = 'purple', pch= 2)
+plot(arrests$age_20day, arrests$combined_oth, xlim = c(19,23), ylim = c(0,80), main = 'Disorderly Conduct', xlab = 'age', ylab = 'Arrests/10,000', col = 'brown', pch= 2)
+plot(arrests$age_20day, arrests$ot_assault, xlim = c(19,23), ylim = c(0,140), main = 'Simple Assault', xlab = 'age', ylab = 'Arrests/10,000', col = 'maroon', pch= 2)
+plot(arrests$age_20day, arrests$aggravated_assault, xlim = c(19,23), ylim = c(0,140), main = 'Aggravated Assault', xlab = 'age', ylab = 'Arrests/10,000', col = 'red', pch= 2)
+
+
+
+```
+
+```{r, results = 'asis'}
+arrests$over21 = ifelse(arrests$age_day >=21, 1, 0)
+xPost = arrests$over21
+xAgec = arrests$age_100day - 21
+
+all = lm(data = arrests, all ~ xPost + xAgec + xPost*xAgec)
+dui = lm(data = arrests, dui ~ xPost + xAgec + xPost*xAgec)
+liquorLaws = lm(data = arrests, liquor_laws  ~ xPost + xAgec + xPost*xAgec)
+robbery = lm(data = arrests, robbery ~ xPost + xAgec + xPost*xAgec)
+disordConduct = lm(data = arrests, combined_oth ~ xPost + xAgec + xPost*xAgec)
+simpleAssualt = lm(data = arrests, ot_assault ~ xPost + xAgec + xPost*xAgec)
+aggroAssault = lm(data = arrests, aggravated_assault ~ xPost + xAgec + xPost*xAgec)
+
+stargazer(all, dui, liquorLaws, robbery, font.size = 'small', column.sep.width = '1pt')
+stargazer(disordConduct, simpleAssualt, aggroAssault, font.size = 'small', column.sep.width = '1pt')
+
+```
+
+5) Does the MLDA reduce arrest rates? Are the reductions in causes of arrests that are likely to be affected by alcohol consumption?
+
+
+The regressions above seem to have standard errors all over the place, and so we cannot say they are significant enough to answer this question. From the rest of the data however, we tend to observe that at 21, crime increases for the arrests subsets of DUIs and aggravated assaults. DUIs seem clear enough, drinking goes up after 21 and people will tend to drink and drive more. Aggravated assault, if we think about it, makes sense too. While under the influence, someone may not be abe to control their emotions and think through situations logically. This may tend to increase the probability that personal conflicts end in physical aggression. Additionally, if someone's going to get in a physical altercation, being drunk will probably make them more aggressive so that "regular assault" can turn into "aggravated assault".
+
+
+```{r}
+# First stage using NHIS drinks_alcohol data
+prop = prop = aggregate(NHIS$drinks_alcohol, list(age30 = NHIS$age_30day),mean)
+NHIS2 = merge(NHIS,prop)
+
+plot(prop, xlim = c(19,23), ylim = c(0.35, 0.75), pch = 16, col = 'blue', xlab = 'Age', ylab = '% of Population Consuming Alcohol', sub = 'bin size 30 days', main = 'First Stage: Turning 21 on Alcohol Consumption')
+
+
+#Using regression outputs to draw lines through the data
+clip(0,21,0,1)
+abline(-0.34772, 0.04313, lwd = 2)
+clip(21,50,0,1)
+abline(0.29051, 0.01697, lwd = 2)
+
+
+```
+
+```{r, result = 'asis'}
+#First Stage estimate requires regressing an 'assignment' on a 'treatment'
+#In this case it's regressing if someone drinks alcohol if they turned 21
+
+#FS = lm(NHIS$drinks_alcohol ~ NHIS$post)
+#stargazer(FS, type = 'html')
+# We yield a FS estimate of 0.148, with an SE of 0.007
+arrests$post = arrests$over21
+
+
+RF = lm(arrests$all ~ arrests$post) #yields 1.345
+RFdui = lm(arrests$dui ~ arrests$post) # yields 128.7
+RFliquor = lm(arrests$liquor_laws ~ arrests$post) # yields -89.57
+RFrobbery = lm(arrests$robbery ~ arrests$post) # yields -12.19
+RFdisorderly = lm(arrests$combined_oth ~ arrests$post) # yields -8.397
+RFassault = lm(arrests$ot_assault ~ arrests$post) #yields -6.629
+RFaggassault = lm(arrests$aggravated_assault ~ arrests$post) # yields 8.331
+
+```
+
+
+```{r, results = 'asis'}
+IV_Estimates = matrix(nrow = 7, ncol = 2)
+arrestSubsets = vector(length = 7)
+arrestSubsets = c('All', 'DUI', 'LiquorLaws','Robbery','Misconduct','Assault','AggAssault')
+IV_Estimates[,1] = arrestSubsets
+values = vector(length = 7)
+values = c('9.097','869.59','-605.2', '82.36','65.73','-44.79','56.29')
+IV_Estimates[,2] = values
+
+stargazer(IV_Estimates, title = 'IV Estimates')
+
+```
