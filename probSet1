@@ -1,0 +1,212 @@
+---
+title: "Assignment1"
+author: "Johar Felix-Contreras"
+date: "1/24/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(Ecdat)
+```
+
+
+Question 1: Creating 2 sets of 3x2 matrix plots. One plots a normal probability of the difference of the given "bp" data. The other plots a randomly generated sample that uses the same parameters(n, mean, sd).
+The 6 plots are differentiated by the reference lines using the given probabilities (p) and (1-p)
+
+```{r}
+########### Question 1#######################################################################
+garch = Garch
+bp = Garch[1:1867, 5]
+diffbp = diff(bp)
+    
+    
+# 3x2 plot matrix    
+op = par(mfrow = c(3,2),
+         pty = 's')
+
+# a). 6 normal plots of diffbp with respective reference lines
+  qqnorm(diffbp)
+  qqline(diffbp, probs = c(0.25,0.75))
+
+  qqnorm(diffbp)
+  qqline(diffbp, probs = c(0.1, 0.9))
+
+  qqnorm(diffbp)
+  qqline(diffbp, probs= c(0.05, 0.95))
+
+  qqnorm(diffbp)
+  qqline(diffbp, probs = c(0.025, 0.975))
+
+  qqnorm(diffbp)
+  qqline(diffbp, probs = c(0.01,0.99))
+
+  qqnorm(diffbp)
+  qqline(diffbp, probs = c(0.0025, 0.9975))
+```
+
+
+```{r}
+# 6 more plots from simulated N(0,1) variables 
+par(mfrow = c(3,2))
+x = rnorm(1866,0,1)
+
+  qqnorm(x)
+  qqline(x, probs = c(0.25,0.75))
+
+  qqnorm(x)
+  qqline(x,probs = c(0.1,0.9))
+
+  qqnorm(x)
+  qqline(x,probs = c(0.05,0.95))
+
+  qqnorm(x)
+  qqline(x,probs = c(0.025,0.975))
+
+  qqnorm(x)
+  qqline(x,probs = c(0.01,0.99))
+
+  qqnorm(x)
+  qqline(x,probs = c(0.0025,0.9975))
+```
+
+The slopes of the reference lines change when changing the assigned (p) and (1-p) values. This is useful because it gives us various chances to see if our data will fall within a straight line and thus evaluate if our data can act like a normal.
+
+Q1) b)
+
+```{r}
+# differences for logarithm of bp 
+par(mfrow = c(3,2))
+logbp = log(bp)
+dlbp = diff(logbp)
+
+  qqnorm(dlbp)
+  qqline(dlbp, probs = c(0.25,0.75))
+  
+  qqnorm(dlbp)
+  qqline(dlbp, probs = c(0.1,0.9))
+  
+  qqnorm(dlbp)
+  qqline(dlbp, probs = c(0.05,0.95))
+  
+  qqnorm(dlbp)
+  qqline(dlbp, probs = c(0.025,0.975))
+  
+  qqnorm(dlbp)
+  qqline(dlbp, probs = c(0.01,0.99))
+  
+  qqnorm(dlbp)
+  qqline(dlbp, probs = c(0.0025,0.9975))
+  
+```
+
+The changes in the logs of bp actually seem to deviate more from the normal than our previous sets.
+  
+
+Question 2:
+The chunks below take the data from Twitter's returns for the month of December in 2016.
+
+```{r}
+###############################################################################################
+################ Question 2 ###################################################################
+  
+install.packages("quantmod", repos = " https://CRAN.R-project.org/package=quantmod")
+library('quantmod')
+getSymbols("TWTR", from= "2016-12-01", to= "2016-12-31")
+
+adjPrices = TWTR[1:21, 6]
+adjPricesN = as.numeric(adjPrices)
+logPrices = log(adjPricesN)
+dRets = diff(logPrices) #Daily returns via log transformation
+
+#Q2 a)
+meanRets = mean(dRets)   # -0.005043602 TWTR Sample Mean
+medianRets = median(dRets)   # -0.005534045 TWTR Sample Median
+sdRets = sd(dRets)   # 0.0249103 TWTR Sample Standard Deviation
+
+#Q2 b)
+par(mfrow = c(1,1))
+qqnorm(dRets)
+qqline(dRets)
+```
+The data seems to be pretty close to normally distributed with one noticable outlier at the last point.
+
+
+Parts c) and d)
+Kernel Density Estimates
+```{r}
+#Q2 c)
+kde = density(dRets)
+plot(kde, "Kernel Estimators")  
+sampleKDE = rnorm(20, meanRets, sdRets) #KDE curve from data
+kde2 = density(sampleKDE)
+lines(kde2, lty = 'dashed') #KDE curve from normal distribution with simliar mean, sd
+```
+The real data seems to be more heavily concentrated on the mean than our random generated sample.
+The real data also seems to have a much heavier tail on the right skew, while the random sample is more evenly distributed about 1-2 SDs around the mean and carries heavier shoulders. 
+
+```{r}
+#Q2 d)
+mad = mad(dRets) #Median Absolute Deviation of the daily returns
+sampleKDE2 = rnorm(20, medianRets, mad)
+kde3 = density(sampleKDE2)
+
+plot(kde, "Kernel Estimators 2")
+lines(kde3, lty = 'dashed') #more similar than the previous comparison
+```
+
+The next sample mimicks the data a bit more closely. The heavy concentration on the mean is more apparent and even mimicks how the data acts in the first few quantiles. The only difference is the absence of the heavy right tail. 
+
+
+Question 3: mystery.txt
+
+```{r}
+################################################################################################
+####### Question 3 #############################################################################
+
+#Used "Import Dataset" function of R to create a vector of 6875 observations from txt file 'mystery'
+mystery <- read.table("/raid/users/jfelixco/hw/Assignment1/mystery.txt", quote="\"", comment.char="")
+dataMystery = as.numeric(mystery[1:6875, 1])
+mysMean = mean(dataMystery)  # -0.2128523
+mysMedian = median(dataMystery) #-0.195068
+mysSd = sd(dataMystery) # 1.974754
+```
+
+```{r}
+plot(dataMystery)
+```
+The data itself seems to resemble a time series following the price of a stock ticker. Because of the negative values, however, that is obviously not the case.
+
+```{r}
+plot(diff(dataMystery)) 
+```
+The differences in the data don't seem too telling aside from the fact that there was a lot of movement towards the end of the series.
+
+```{r}
+plot(density(dataMystery))
+sampleMys = rnorm(6875, -0.2128523, 1.974754)
+lines(density(sampleMys), lty = 'dashed')
+```
+
+The density shows that it doesn't stray too far from a normal. Heavy concentration at the mean and noticeably heavy tails.
+
+```{r}
+logMys = log(dataMystery)
+```
+The log produces errors in the data, which may suggest to us that the data is already in the form of a log or a difference of some kind.
+
+```{r}
+qqnorm(dataMystery)
+qqline(dataMystery) 
+```
+Does not deviate too heavily from the normal, but shows pretty heavy tails, particularly at R+ end that we can see from the normal plot.
+
+------------------------------------------------------------------------------------------
+
+The conclusion I draw from this data is that it will be one of two things:
+1) Each data point suggests that how much that date's stock price is deviating from the mean stock price taken along the same time series. This is why it is centered around a [-0.2, 0] interval and would explain the last series at the end where the data hovers around -4.
+
+2) The data is plotting daily returns, concluded for similar reasons.
+
