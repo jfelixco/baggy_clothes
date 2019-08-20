@@ -1,6 +1,6 @@
 # baggy_clothes
 
-Simply an archive for schoolwork I've done in R.
+Simply a script archive for schoolwork I've done in R.
 No particular, clean organization or purpose but just a raw collection of the methods I've used to serve as a reminder
   for if these methods are needed later on.
   
