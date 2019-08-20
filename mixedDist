@@ -1,0 +1,64 @@
+---
+title: "lab6"
+author: "Johar"
+date: "2/13/2019"
+output: html_document
+---
+
+```{r}
+n = 10000
+lambda = 2
+
+expDraw = rexp(n, lambda)
+hist(expDraw)
+
+```
+
+
+
+```{r}
+sd = 0.5
+logNDraws = rlnorm(n, mu, sd)
+hist(logNDraws)
+
+
+```
+
+#mixtures
+
+```{r, fig.width= 8, fig.length = 8}
+
+n = 10000
+p1 = 0.2
+lambda = 1
+
+mu1 = 0.5
+sd1 = 1
+
+
+
+mixFunc = function(n, p1, lambda, mu1, sd1) {
+  mix = vector(mode = "numeric",length = n)
+for(i in 1:n){ {
+  whichDistribution = runif(1,0,1)
+  if(whichDistribution <= p1){
+    mix[i] = rlnorm(1,mu1,sd1)
+  }
+  else{
+    mix[i] = rexp(n, lambda)
+  }
+  return(mix)
+}
+}
+}
+
+data = mixFunc(n, p1, lambda, mu1, sd1)
+hist(data)
+
+par(mfrow=c(3,2),bg="white")
+for(p in c(.25,.5,.75)){
+  for(lambda in c(.2,.6)){
+    plot(density(mixFunc(n,p1,lambda, mu1, sd1)),xlim=c(0,50))
+  }
+}
+```
